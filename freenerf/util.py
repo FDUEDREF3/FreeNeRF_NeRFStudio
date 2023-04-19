@@ -1,5 +1,8 @@
 import torch 
-
+from dataclasses import dataclass, field
+@dataclass
+class freenerfT:
+    max_num_iterations: int =30000
 
 def get_freq_mask(pos_enc_length, current_iter, total_reg_iter):
     if current_iter < total_reg_iter:

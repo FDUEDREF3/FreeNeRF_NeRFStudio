@@ -55,7 +55,7 @@ from nerfstudio.model_components.shaders import NormalsShader
 from nerfstudio.models.base_model import Model, ModelConfig
 from nerfstudio.utils import colormaps
 
-
+from freenerf.freenerf_field import TorchFreeNerfactoField
 
 @dataclass
 class FreeNeRFactoConfig(NerfactoModelConfig):
@@ -66,6 +66,13 @@ class FreeNeRFactoModel(NerfactoModel):
     config: FreeNeRFactoConfig
     def populate_modules(self):
         super().populate_modules()
+        if self.config.disable_scene_contraction:
+            scene_contraction = None
+        else:
+            scene_contraction = SceneContraction(order=float("inf"))
+        self.field = TorchFreeNerfactoField(
+            self.scene_box.aabb, spatial_distortion=scene_contraction, num_images=self.num_train_data
+        )
         pass 
     def get_param_groups(self) -> Dict[str, List[Parameter]]:
         param_groups = {}
@@ -104,7 +111,7 @@ class FreeNeRFactoModel(NerfactoModel):
             )
         return callbacks
     # TODO 
-    def forward(self, ray_bundle: RayBundle,step:int) -> Dict[str, torch.Tensor]:
+    def forward(self, ray_bundle: RayBundle,freq_mask=None) -> Dict[str, torch.Tensor]:
         """Run forward starting with a ray bundle. This outputs different things depending on the configuration
         of the model and whether or not the batch is provided (whether or not we are training basically)
 
@@ -116,11 +123,11 @@ class FreeNeRFactoModel(NerfactoModel):
             # 在这里完成了远近平面的设置
             ray_bundle = self.collider(ray_bundle)
 
-        return self.get_outputs(ray_bundle,step)
-    def get_outputs(self, ray_bundle: RayBundle,step:int):
+        return self.get_outputs(ray_bundle,freq_mask)
+    def get_outputs(self, ray_bundle: RayBundle,freq_mask=None):
         # print(step)
         ray_samples, weights_list, ray_samples_list = self.proposal_sampler(ray_bundle, density_fns=self.density_fns)
-        field_outputs = self.field(ray_samples, compute_normals=self.config.predict_normals)
+        field_outputs = self.field(ray_samples, compute_normals=self.config.predict_normals,freq_mask=freq_mask)
         weights = ray_samples.get_weights(field_outputs[FieldHeadNames.DENSITY])
         weights_list.append(weights)
         ray_samples_list.append(ray_samples)

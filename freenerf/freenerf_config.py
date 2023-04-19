@@ -46,16 +46,18 @@ from nerfstudio.pipelines.base_pipeline import VanillaPipelineConfig
 
 from nerfstudio.pipelines.dynamic_batch import DynamicBatchPipelineConfig
 from nerfstudio.plugins.registry import discover_methods
-
+from freenerf.util import freenerfT
 
 from nerfstudio.plugins.types import MethodSpecification
 from freenerf.freenerf import FreeNeRFactoModel,FreeNeRFactoConfig
+
 from freenerf.freenerf_pipeline import  FreeNeRFactoPipelineConfig,FreeNeRFactoPipeline
+
 freenerfacto_method = MethodSpecification(config=TrainerConfig(
     method_name="freenerfacto",
     steps_per_eval_batch=500,
     steps_per_save=2000,
-    max_num_iterations=30000,
+    max_num_iterations=freenerfT.max_num_iterations,
     mixed_precision=True,
     pipeline=FreeNeRFactoPipelineConfig(
         datamanager=VanillaDataManagerConfig(

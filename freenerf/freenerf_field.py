@@ -114,7 +114,7 @@ class TorchFreeNerfactoField(Field):
         if freq_mask is not None :
             (positions_freq_mask,dir_freq_mask) = freq_mask
             
-            encoded_xyz = self.position_encoding(positions.view(-1, 3))*positions_freq_mask.view(-1, 1)
+            encoded_xyz = self.position_encoding(positions.view(-1, 3))*positions_freq_mask.view(1,-1)
         else:
             encoded_xyz = self.position_encoding(positions.view(-1, 3))
         base_mlp_out = self.mlp_base(encoded_xyz).view(*ray_samples.frustums.shape, -1)
@@ -145,7 +145,7 @@ class TorchFreeNerfactoField(Field):
             #     *outputs_shape, -1
             # )
             if freq_mask is not None :
-                encoded_dir = self.direction_encoding(ray_samples.frustums.directions.reshape(-1, 3))*dir_freq_mask.view(-1, 1)
+                encoded_dir = self.direction_encoding(ray_samples.frustums.directions.reshape(-1, 3))*dir_freq_mask.view(1,-1)
             else:
                 encoded_dir = self.direction_encoding(ray_samples.frustums.directions.reshape(-1, 3))
             mlp_out = self.mlp_head(
@@ -160,6 +160,26 @@ class TorchFreeNerfactoField(Field):
             ).view(*outputs_shape, -1)
             outputs[field_head.field_head_name] = field_head(mlp_out)
         return outputs
+    def forward(self, ray_samples: RaySamples, compute_normals: bool = False,freq_mask=None) -> Dict[FieldHeadNames, TensorType]:
+        """Evaluates the field at points along the ray.
+
+        Args:
+            ray_samples: Samples to evaluate field on.
+        """
+        if compute_normals:
+            with torch.enable_grad():
+                density, density_embedding = self.get_density(ray_samples,freq_mask=freq_mask)
+        else:
+            density, density_embedding = self.get_density(ray_samples,freq_mask=freq_mask)
+
+        field_outputs = self.get_outputs(ray_samples, density_embedding=density_embedding,freq_mask=freq_mask)
+        field_outputs[FieldHeadNames.DENSITY] = density  # type: ignore
+
+        if compute_normals:
+            with torch.enable_grad():
+                normals = self.get_normals()
+            field_outputs[FieldHeadNames.NORMALS] = normals  # type: ignore
+        return field_outputs
 
 
-field_implementation_to_class: Dict[str, Field] = {"tcnn": TCNNNerfactoField, "torch": TorchNerfactoField}
+field_implementation_to_class: Dict[str, Field] = {"torch": TorchFreeNerfactoField}

@@ -17,6 +17,8 @@ from torch import nn
 from torch.nn import Parameter
 from torch.nn.parallel import DistributedDataParallel as DDP
 from typing_extensions import Literal
+# from nerfstudio.engine.trainer import TrainerConfig
+from freenerf.util import freenerfT
 from nerfstudio.pipelines.base_pipeline import (
     VanillaPipeline,
     VanillaPipelineConfig,
@@ -43,6 +45,7 @@ class FreeNeRFactoPipelineConfig(VanillaPipelineConfig):
     """specifies the datamanager config"""
     model: ModelConfig = ModelConfig()
     """specifies the model config"""
+    T:int=freenerfT.max_num_iterations*0.9
 
 
 class FreeNeRFactoPipeline(VanillaPipeline):
@@ -107,12 +110,13 @@ class FreeNeRFactoPipeline(VanillaPipeline):
             step: current iteration step to update sampler if using DDP (distributed)
         """
         print(self._model.field.position_encoding.get_out_dim())
-        from util import get_freq_mask
-        # pos_freq_mask=get_freq_mask(self._model.field.position_encoding.get_out_dim(),step,self.config)
+        from freenerf.util import get_freq_mask
+        pos_freq_mask=get_freq_mask(self._model.field.position_encoding.get_out_dim(),step,self.config.T).to(self.device)
+        dir_freq_mask=get_freq_mask(self._model.field.direction_encoding.get_out_dim(),step,self.config.T).to(self.device)
         ray_bundle, batch = self.datamanager.next_train(step)
         # print("current step",step)
         ## TODO add freq_mask in Raybundle
-        model_outputs = self.model(ray_bundle,step)
+        model_outputs = self.model(ray_bundle,(pos_freq_mask,dir_freq_mask))
         metrics_dict = self.model.get_metrics_dict(model_outputs, batch)
 
         if self.config.datamanager.camera_optimizer is not None:
