@@ -1,0 +1,10 @@
+[project]
+name = "freenerfacto"
+version = "0.1.0"
+
+dependencies=[
+ "nerfstudio"
+]
+
+[project.entry-points.'nerfstudio.method_configs']
+freenerfacto = 'freenerf.freenerf_config:freenerfacto_method'
