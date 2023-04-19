@@ -106,8 +106,12 @@ class FreeNeRFactoPipeline(VanillaPipeline):
         Args:
             step: current iteration step to update sampler if using DDP (distributed)
         """
+        print(self._model.field.position_encoding.get_out_dim())
+        from util import get_freq_mask
+        # pos_freq_mask=get_freq_mask(self._model.field.position_encoding.get_out_dim(),step,self.config)
         ray_bundle, batch = self.datamanager.next_train(step)
-        print("current step",step)
+        # print("current step",step)
+        ## TODO add freq_mask in Raybundle
         model_outputs = self.model(ray_bundle,step)
         metrics_dict = self.model.get_metrics_dict(model_outputs, batch)
 
