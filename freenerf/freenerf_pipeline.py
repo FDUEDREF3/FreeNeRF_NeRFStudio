@@ -45,7 +45,7 @@ class FreeNeRFactoPipelineConfig(VanillaPipelineConfig):
     """specifies the datamanager config"""
     model: ModelConfig = ModelConfig()
     """specifies the model config"""
-    T:int=freenerfT.max_num_iterations*0.
+    T:int=freenerfT.max_num_iterations*0.9
 
 
 class FreeNeRFactoPipeline(VanillaPipeline):
