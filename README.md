@@ -1,5 +1,5 @@
 # FreeNeRF implement with nerfstudio
-An unofficial implementation for  [FreeNeRF: Improving Few-shot Neural Rendering with Free Frequency Regularization](https://arxiv.org/abs/2303.07418) based [nerfstudio](https://github.com/nerfstudio-project/nerfstudio) .
+An unofficial implementation (only implement freq_mask) for  [FreeNeRF: Improving Few-shot Neural Rendering with Free Frequency Regularization](https://arxiv.org/abs/2303.07418) based [nerfstudio](https://github.com/nerfstudio-project/nerfstudio) .
 
 # how to use 
 
