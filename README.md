@@ -20,3 +20,7 @@ follow the guide in [nerfstudio](https://github.com/nerfstudio-project/nerfstudi
 ns-train freenerfacto --data DATADIR
 ```
 
+
+## notice
+
+due to the nerfstudio's update (mainly due to the change of nerfacc's version)，this 	repository may not work on the latest nerfstudio :( .I will fix that when im available.
